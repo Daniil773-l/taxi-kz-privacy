@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Подключение OLX к Taxi KZ</title>
+<h1>Подключение OLX к Taxi KZ</h1>
+<p>Для входа откройте Taxi KZ на компьютере с запущенным локальным сервером и выберите «Подключить аккаунт OLX».</p>
+<script>
+  const params = new URLSearchParams(location.search);
+  history.replaceState(null, '', location.pathname);
+  if (/^[0-9a-f]{32}$/.test(params.get('state') || '') && (params.get('code') || params.get('error'))) {
+    const local = new URL('http://127.0.0.1:8787/auth/olx/callback');
+    for (const key of ['state', 'code', 'error', 'error_description']) {
+      if (params.has(key)) local.searchParams.set(key, params.get(key));
+    }
+    location.replace(local.href);
+  }
+</script>
+</html>
