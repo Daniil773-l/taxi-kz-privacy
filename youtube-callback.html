@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Подключение YouTube · Taxi KZ</title>
+<style>body{font:18px/1.6 system-ui;color:#242731;max-width:40rem;margin:10vh auto;padding:1rem}</style>
+<h1>Подключение YouTube</h1><p id="status" role="status">Откройте ссылку на подключение, которую предоставила команда Taxi KZ.</p>
+<script type="module">
+const params = new URLSearchParams(location.search);
+history.replaceState(null, '', location.pathname);
+const status = document.querySelector('#status');
+const encode = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes)));
+async function finish() {
+  const state = params.get('state');
+  if (!/^[0-9a-f]{32}\.[A-Za-z0-9_-]{43}$/.test(state || '')) return;
+  if (params.get('error')) { status.textContent = 'Google не предоставил доступ. Можно закрыть окно.'; return; }
+  if (!params.get('code')) return;
+  status.textContent = 'Подключаем канал…';
+  const [id, secret] = state.split('.');
+  const raw = Uint8Array.from(atob(secret.replaceAll('-','+').replaceAll('_','/')), ch=>ch.charCodeAt(0));
+  const aes = await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = new TextEncoder().encode(JSON.stringify({state,code:params.get('code')}));
+  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv}, aes, plaintext);
+  const packet = new Uint8Array(iv.length+ciphertext.byteLength);
+  packet.set(iv);packet.set(new Uint8Array(ciphertext),iv.length);
+  const result = await fetch('https://taxikz-youtube-connect.daniiproger.chatgpt.site/deliver', {method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain'},body:JSON.stringify({id,cipher:encode(packet)})});
+  if (!result.ok) throw new Error();
+  status.textContent = 'Разрешение передано. Taxi KZ проверит канал и загрузит данные. Это окно можно закрыть.';
+}
+finish().catch(()=>{status.textContent='Не удалось завершить вход. Попросите команду Taxi KZ проверить сервер и прислать новую ссылку.';});
+</script></html>
