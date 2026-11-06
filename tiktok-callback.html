@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>TikTok — Taxi KZ local</title><style>body{font:18px/1.5 system-ui;max-width:45rem;margin:4rem auto;padding:1rem;color:#242731}a{color:#175c9b}</style></head>
+<body><h1>Подключение TikTok к Taxi KZ</h1><p id="status">Откройте Taxi KZ на компьютере с запущенным локальным сервером и выберите «Подключить TikTok».</p>
+<a href="http://127.0.0.1:4173/">Вернуться в локальный Taxi KZ</a>
+<script>
+const params = new URLSearchParams(location.search);
+history.replaceState(null,'',location.pathname);
+if(/^[0-9a-f]{32}$/.test(params.get('state')||'') && (params.get('code')||params.get('error'))){
+ const local = new URL('http://127.0.0.1:8787/auth/tiktok/callback');
+ for(const k of ['state','code','scopes','error','error_description']){const v=params.get(k);if(v&&v.length<=4096)local.searchParams.set(k,v);}
+ document.getElementById('status').textContent='Возвращаемся в локальный Taxi KZ…';
+ location.replace(local.href);
+}
+</script></body></html>
